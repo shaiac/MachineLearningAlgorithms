@@ -28,13 +28,6 @@ class TrainingValues:
             self.normalize_features_values(self.train_x)
             self.normalize_features_values(self.test_x)
 
-    # #
-    # def init_wines_labels_dic(self):
-    #     index = 0
-    #     for x in self.train_x:
-    #         self.wines_labels_dic[x.tobytes()] = self.train_y[index]
-    #         index += 1
-
     # Creating a single wine features vector.
     @staticmethod
     def create_vector(line):
@@ -143,12 +136,19 @@ class KNN:
             else:
                 labels_count_dic[label] = 1
         max_label = max(labels_count_dic, key=lambda k: labels_count_dic[k])
-        self.x_y_dic[x.tobytes()] = max_label
+        return max_label
 
     def train(self):
+        labeled_test = []
+        # Running the algorithm on the train examples
         for x in self.training_values.training_set:
             nearest_neighbours = self.find_k_nearest_neighbours(x=x)
-            self.label_x(x=x, nearest_neighbours=nearest_neighbours)
+            self.x_y_dic[x.tobytes()] = self.label_x(x=x, nearest_neighbours=nearest_neighbours)
+        # Running the algorithm on the test
+        for x in self.training_values.test_x:
+            nearest_neighbours = self.find_k_nearest_neighbours(x=x)
+            labeled_test.append(self.label_x(x=x, nearest_neighbours=nearest_neighbours))
+        return labeled_test
 
 
 # The Perceptron algorithm for machine learning.
@@ -230,26 +230,20 @@ class PassiveAggressive:
         return self.label_test()
 
 
-# def check_training(wines_labels_dic, training_output):
-#     true_count = 0
-#     false_count = 0
-#     for wine in training_output:
-#         w1 = training_output[wine]
-#         w2 = wines_labels_dic[wine]
-#         if w1 == w2:
-#             true_count += 1
-#         else:
-#             false_count += 1
-#     print("True:" + str(true_count) + "     False:" + str(false_count))
+def print_output(size):
+    for i in range(size):
+        print(f"knn: {knn_test_labels[i]}, perceptron: {perceptron_test_labels[i]}, pa: {pa_test_labels[i]}")
 
 
 # The main function
 if __name__ == "__main__":
     knn = KNN(k=7)
-    knn.train()
+    knn_test_labels = knn.train()
+    print(knn_test_labels)
     perceptron = Perceptron(learning_rate=0.33, epochs=20)
     perceptron_test_labels = perceptron.train()
     print(perceptron_test_labels)
-    pa = PassiveAggressive(learning_rate=0.33, epochs=20)
+    pa = PassiveAggressive(learning_rate=0.33, epochs=17)
     pa_test_labels = pa.train()
     print(pa_test_labels)
+    print_output(len(pa_test_labels))
